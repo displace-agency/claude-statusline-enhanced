@@ -71,7 +71,7 @@ sudo dnf install jq bc
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/yourusername/claude-statusline-enhanced.git
+git clone https://github.com/displace-agency/claude-statusline-enhanced.git
 cd claude-statusline-enhanced
 ```
 
@@ -206,7 +206,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 If you find this helpful, please ⭐ the repository!
 
-For issues or questions, please [open an issue](https://github.com/yourusername/claude-statusline-enhanced/issues).
+For issues or questions, please [open an issue](https://github.com/displace-agency/claude-statusline-enhanced/issues).
 
 ---
 
