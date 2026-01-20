@@ -4,14 +4,14 @@ A beautiful, informative statusline for Claude Code that displays real-time metr
 
 ## Features
 
-- **📊 Token Usage**: Real-time token consumption with K/M formatting (e.g., "122.7K tokens")
-- **💰 Cost Tracking**: Shows API pricing and Max 20x monthly amortization with clear labels
-- **⚡ Cache Efficiency**: Displays cache hit rate percentage in parentheses
-- **💬 Message Count**: Track number of messages with full "messages" label
-- **⏱️ Session Duration**: Precise timing with "time:" prefix including seconds (format: 1h 23m 45s)
-- **📍 Context Remaining**: Monitor available context with "context:" prefix and "left" indicator
-- **🎨 Clean Design**: Consistent gray text with white bullet separators for readability
-- **⚙️ Git Integration**: Shows current branch, status, and sync info
+- **Token Usage**: Real-time token consumption with K/M formatting (e.g., "122.7K tokens")
+- **Cost Tracking**: Shows API pricing and Max 20x monthly amortization with clear labels
+- **Cache Efficiency**: Displays cache hit rate percentage in parentheses
+- **Message Count**: Track number of messages with full "messages" label
+- **Session Duration**: Precise timing with "time:" prefix including seconds (format: 1h 23m 45s)
+- **Context Remaining**: Monitor available context with "context:" prefix and "left" indicator
+- **Clean Design**: Consistent gray text with white bullet separators for readability
+- **Git Integration**: Shows current branch, status, and sync info
 
 ## Preview
 
@@ -219,7 +219,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## Support
 
-If you find this helpful, please ⭐ the repository!
+If you find this helpful, please star the repository!
 
 For issues or questions, please [open an issue](https://github.com/displace-agency/claude-statusline-enhanced/issues).
 
