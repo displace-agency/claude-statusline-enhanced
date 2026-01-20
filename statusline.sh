@@ -32,25 +32,35 @@ max_cost=""
 message_count=""
 session_duration=""
 
-# Count messages from transcript if available
+# Count messages and calculate actual elapsed time from transcript
 if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
     message_count=$(jq -rs '[.[] | select(.type == "user" or .type == "assistant")] | length' "$transcript_path" 2>/dev/null)
-fi
 
-# Format session duration from milliseconds
-if [ "$session_duration_ms" -gt 0 ]; then
-    duration_sec=$((session_duration_ms / 1000))
-    if [ "$duration_sec" -ge 3600 ]; then
-        hours=$((duration_sec / 3600))
-        minutes=$(((duration_sec % 3600) / 60))
-        seconds=$((duration_sec % 60))
-        session_duration="${hours}h ${minutes}m ${seconds}s"
-    elif [ "$duration_sec" -ge 60 ]; then
-        minutes=$((duration_sec / 60))
-        seconds=$((duration_sec % 60))
-        session_duration="${minutes}m ${seconds}s"
-    else
-        session_duration="${duration_sec}s"
+    # Calculate actual elapsed time from first to last message timestamp
+    first_ts=$(jq -r 'select(.type == "user" or .type == "assistant") | .timestamp' "$transcript_path" 2>/dev/null | head -1)
+    last_ts=$(jq -r 'select(.type == "user" or .type == "assistant") | .timestamp' "$transcript_path" 2>/dev/null | tail -1)
+
+    if [ -n "$first_ts" ] && [ -n "$last_ts" ]; then
+        # Convert ISO timestamps to epoch seconds
+        first_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${first_ts%.*}" +%s 2>/dev/null)
+        last_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${last_ts%.*}" +%s 2>/dev/null)
+
+        if [ -n "$first_epoch" ] && [ -n "$last_epoch" ]; then
+            duration_sec=$((last_epoch - first_epoch))
+
+            if [ "$duration_sec" -ge 3600 ]; then
+                hours=$((duration_sec / 3600))
+                minutes=$(((duration_sec % 3600) / 60))
+                seconds=$((duration_sec % 60))
+                session_duration="${hours}h ${minutes}m ${seconds}s"
+            elif [ "$duration_sec" -ge 60 ]; then
+                minutes=$((duration_sec / 60))
+                seconds=$((duration_sec % 60))
+                session_duration="${minutes}m ${seconds}s"
+            else
+                session_duration="${duration_sec}s"
+            fi
+        fi
     fi
 fi
 

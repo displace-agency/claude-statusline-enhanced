@@ -38,7 +38,7 @@ This design keeps you informed without pulling focus from your actual work.
 |--------|-------------|----------------|
 | **Model** | Current Claude model (Sonnet/Opus/Haiku) | Gray text |
 | **Messages** | Total messages in conversation | Gray text with white bullet separator |
-| **Duration** | Session time with "time:" prefix | Gray text (format: Xh Ym Zs, Ym Zs, or Zs) |
+| **Duration** | Actual elapsed time (first to last message) | Gray text (format: Xh Ym Zs, Ym Zs, or Zs) |
 | **Tokens** | Total tokens consumed (K/M formatted) | Gray text |
 | **Cache %** | Percentage of tokens from cache | Gray text in parentheses |
 | **API Cost** | What this would cost on API pricing | Gray text with "API" label |
@@ -145,10 +145,20 @@ The statusline script:
 1. Receives JSON data from Claude Code via stdin containing all session metrics
 2. Extracts token usage, costs, and context data from the `context_window` and `cost` fields
 3. Counts messages by parsing the transcript file
-4. Formats duration, tokens, and context with K/M suffixes for readability
-5. Calculates cache hit rate and Max 20x monthly amortization (API cost ÷ 12)
-6. Displays all metrics with consistent gray text and white bullet separators
-7. Updates automatically on every message in the conversation
+4. **Calculates actual elapsed time** from first to last message timestamps (not wall-clock time, so pauses/idle time don't inflate the duration)
+5. Formats duration, tokens, and context with K/M suffixes for readability
+6. Calculates cache hit rate and Max 20x monthly amortization (API cost ÷ 12)
+7. Displays all metrics with consistent gray text and white bullet separators
+8. Updates automatically on every message in the conversation
+
+**Important Notes:**
+- **Model Display**: Shows your *current* model (e.g., "Haiku 4.5")
+- **Cost Accumulation**: Costs accumulate across *all* models used in the session
+  - If you switched from Sonnet → Haiku, costs reflect both
+  - This is why you might see high costs with Haiku displayed
+- **Time Calculation**: Uses message timestamps, not wall-clock time
+  - Only counts time from first to last message
+  - Doesn't inflate with long pauses or idle periods
 
 ## Troubleshooting
 
