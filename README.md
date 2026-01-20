@@ -5,7 +5,7 @@ A beautiful, informative statusline for Claude Code that displays real-time metr
 ## Features
 
 - **📊 Token Usage**: Real-time token consumption with K/M formatting (e.g., "122.7K tokens")
-- **💰 Cost Tracking**: Shows both API pricing and subscription equivalent with clear labels
+- **💰 Cost Tracking**: Shows API pricing and Max 20x monthly amortization with clear labels
 - **⚡ Cache Efficiency**: Displays cache hit rate percentage in parentheses
 - **💬 Message Count**: Track number of messages with full "messages" label
 - **⏱️ Session Duration**: Precise timing with "time:" prefix including seconds (format: 1h 23m 45s)
@@ -17,7 +17,7 @@ A beautiful, informative statusline for Claude Code that displays real-time metr
 
 ```
 ~/project on main •
-[Sonnet 4.5 • 150 messages • time: 1h 23m 45s • 153.5K tokens (92% cached) • API $4.11 • Sub $0.21 • context: 52K left]
+[Sonnet 4.5 • 150 messages • time: 1h 23m 45s • 153.5K tokens (92% cached) • API $4.11 • Max 20x $0.34 • context: 52K left]
 ```
 
 ## Design Philosophy
@@ -42,7 +42,7 @@ This design keeps you informed without pulling focus from your actual work.
 | **Tokens** | Total tokens consumed (K/M formatted) | Gray text |
 | **Cache %** | Percentage of tokens from cache | Gray text in parentheses |
 | **API Cost** | What this would cost on API pricing | Gray text with "API" label |
-| **Sub Cost** | Approximate subscription value (API ÷ 20) | Gray text with "Sub" label |
+| **Max 20x Cost** | Monthly amortization value (API ÷ 12) | Gray text with "Max 20x" label |
 | **Context Left** | Remaining context with "context:" prefix | Gray text with "left" suffix |
 
 ## Installation
@@ -104,15 +104,20 @@ The statusline will appear at the top of your terminal on the next conversation.
 
 ## Configuration
 
-### Subscription Cost Calculation
+### Max 20x Cost Calculation
 
-The "Sub" cost is calculated as: `API Cost ÷ 20`
+The "Max 20x" cost uses monthly amortization: `API Cost ÷ 12`
 
-This approximates the value you get with Claude Max 20x plan compared to API pricing. You can adjust this multiplier in the script if you're on a different plan:
+This is based on the actual value multiplier of the Max 20x plan:
+- Max 20x subscription: **$200/month**
+- Maximum API value: **$2,400/month** (50 sessions × $48 max per session)
+- Actual multiplier: **12x** ($2,400 ÷ $200)
 
-- **Max 5x plan**: Change `/20` to `/5`
-- **Pro plan**: Change `/20` to `/1` (no multiplier)
-- **Custom**: Set your own divisor
+This shows what fraction of your $200 monthly subscription each session represents. You can adjust this multiplier in the script if you're on a different plan:
+
+- **Max 5x plan**: Change `/12` to `/3` (based on lower value multiplier)
+- **Pro plan**: Change `/12` to `/1` (no multiplier)
+- **Custom**: Set your own divisor based on your plan's value ratio
 
 ### Color Customization
 
@@ -141,7 +146,7 @@ The statusline script:
 2. Extracts token usage, costs, and context data from the `context_window` and `cost` fields
 3. Counts messages by parsing the transcript file
 4. Formats duration, tokens, and context with K/M suffixes for readability
-5. Calculates cache hit rate and subscription cost approximation (API cost ÷ 20)
+5. Calculates cache hit rate and Max 20x monthly amortization (API cost ÷ 12)
 6. Displays all metrics with consistent gray text and white bullet separators
 7. Updates automatically on every message in the conversation
 

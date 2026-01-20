@@ -28,7 +28,7 @@ dir="${cwd/#$HOME/~}"
 # Calculate metrics from Claude Code's provided data
 tokens=""
 api_cost=""
-sub_cost=""
+max_cost=""
 message_count=""
 session_duration=""
 
@@ -86,9 +86,9 @@ if [ "$total_input" -gt 0 ] || [ "$total_output" -gt 0 ]; then
     # Use provided API cost or calculate it
     if [ "$(echo "$total_cost_usd > 0" | bc)" -eq 1 ]; then
         api_cost=$(printf "\$%.2f" "$total_cost_usd")
-        # Calculate approximate subscription equivalent (API cost / 20 for Max 20x plan)
-        sub_calc=$(echo "scale=4; $total_cost_usd / 20" | bc)
-        sub_cost=$(printf "\$%.2f" "$sub_calc")
+        # Calculate Max 20x subscription equivalent (API cost / 12 based on $2,400 max value ÷ $200 subscription)
+        max_calc=$(echo "scale=4; $total_cost_usd / 12" | bc)
+        max_cost=$(printf "\$%.2f" "$max_calc")
     fi
 
     # Calculate context remaining
@@ -169,8 +169,8 @@ if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
         fi
 
         # Costs with clear labels
-        if [ -n "$api_cost" ] && [ -n "$sub_cost" ]; then
-            output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mSub ${sub_cost}\033[0m"
+        if [ -n "$api_cost" ] && [ -n "$max_cost" ]; then
+            output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mMax 20x ${max_cost}\033[0m"
         elif [ -n "$api_cost" ]; then
             output="${output} \033[37m•\033[0m \033[90m${api_cost}\033[0m"
         fi
@@ -205,8 +205,8 @@ if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
         fi
 
         # Costs with clear labels
-        if [ -n "$api_cost" ] && [ -n "$sub_cost" ]; then
-            output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mSub ${sub_cost}\033[0m"
+        if [ -n "$api_cost" ] && [ -n "$max_cost" ]; then
+            output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mMax 20x ${max_cost}\033[0m"
         elif [ -n "$api_cost" ]; then
             output="${output} \033[37m•\033[0m \033[90m${api_cost}\033[0m"
         fi
