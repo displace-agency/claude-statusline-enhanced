@@ -98,6 +98,8 @@ if [ "$total_input" -gt 0 ] || [ "$total_output" -gt 0 ]; then
         api_cost=$(printf "\$%.2f" "$total_cost_usd")
         # Calculate Max 20x subscription equivalent (API cost / 12 based on $2,400 max value ÷ $200 subscription)
         max_calc=$(echo "scale=4; $total_cost_usd / 12" | bc)
+        # Add leading zero if bc returns .xxx format
+        [[ "$max_calc" == .* ]] && max_calc="0$max_calc"
         max_cost=$(printf "\$%.2f" "$max_calc")
     fi
 
@@ -252,8 +254,8 @@ else
     fi
 
     # Costs with clear labels
-    if [ -n "$api_cost" ] && [ -n "$sub_cost" ]; then
-        output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mSub ${sub_cost}\033[0m"
+    if [ -n "$api_cost" ] && [ -n "$max_cost" ]; then
+        output="${output} \033[37m•\033[0m \033[90mAPI ${api_cost}\033[0m \033[37m•\033[0m \033[90mMax 20x ${max_cost}\033[0m"
     elif [ -n "$api_cost" ]; then
         output="${output} \033[37m•\033[0m \033[90m${api_cost}\033[0m"
     fi
