@@ -1,228 +1,115 @@
 # Claude Code Enhanced Statusline
 
-A beautiful, informative statusline for Claude Code that displays real-time metrics about your conversation, including token usage, costs, cache efficiency, and more.
+A two-line statusline for Claude Code built around one question: **how much of my plan have I already spent, and what is spending it?**
 
-## Features
-
-- **Token Usage**: Real-time token consumption with K/M formatting (e.g., "122.7K tokens")
-- **Cost Tracking**: Shows API pricing and Max 20x monthly amortization with clear labels
-- **Cache Efficiency**: Displays cache hit rate percentage in parentheses
-- **Message Count**: Track number of messages with full "messages" label
-- **Session Duration**: Precise timing with "time:" prefix including seconds (format: 1h 23m 45s)
-- **Context Remaining**: Monitor available context with "context:" prefix and "left" indicator
-- **Clean Design**: Consistent gray text with white bullet separators for readability
-- **Git Integration**: Shows current branch, status, and sync info
+It reads the rate-limit figures Claude Code passes to the statusline, so the percentages are the real ones from your plan, not an estimate.
 
 ## Preview
 
 ```
-~/project on main •
-[Sonnet 4.5 • 150 messages • time: 1h 23m 45s • 153.5K tokens (92% cached) • API $4.11 • Max 20x $0.34 • context: 52K left]
+~/websites/my-site · Opus 5 1M · high · think
+ctx ▓▓▓░░░░░░░ 31% of 500K · 5h 12% ↻2h41m · week 38% ↻3d14h · here +4%
 ```
 
-## Design Philosophy
+## What it shows
 
-The statusline follows a clean, minimal design philosophy:
+**Line 1 — where you are and what is running**
 
-- **Consistency**: All metrics use gray text for a unified, non-distracting appearance
-- **Clarity**: Clear labels like "time:", "context:", and "messages" remove ambiguity
-- **Precision**: Includes seconds in duration for accurate session tracking
-- **Visual Hierarchy**: White bullet separators provide clear metric boundaries
-- **Readability**: K/M suffixes prevent number clutter while maintaining accuracy
+| Field | Meaning |
+|---|---|
+| Directory | Working directory, `~` shortened |
+| Model | Current model, `1M` kept when on the long-context variant |
+| Effort | Effort level, when set |
+| `think` | Shown when extended thinking is on |
 
-This design keeps you informed without pulling focus from your actual work.
+**Line 2 — the four numbers that should change your behaviour**
 
-## Metrics Explained
+| Field | Meaning |
+|---|---|
+| `ctx` | Context used, as a bar and a percentage. Measured against `autoCompactWindow` when you have set one, otherwise the model's window |
+| `5h` | Five-hour rate limit used, with time until it resets |
+| `week` | Weekly rate limit used, with time until it resets |
+| `here` | **Weekly percent burned since this session opened.** The one number that tells you what the current conversation is costing |
 
-| Metric | Description | Display Format |
-|--------|-------------|----------------|
-| **Model** | Current Claude model (Sonnet/Opus/Haiku) | Gray text |
-| **Messages** | Total messages in conversation | Gray text with white bullet separator |
-| **Duration** | Actual elapsed time (first to last message) | Gray text (format: Xh Ym Zs, Ym Zs, or Zs) |
-| **Tokens** | Total tokens consumed (K/M formatted) | Gray text |
-| **Cache %** | Percentage of tokens from cache | Gray text in parentheses |
-| **API Cost** | What this would cost on API pricing | Gray text with "API" label |
-| **Max 20x Cost** | Monthly amortization value (API ÷ 12) | Gray text with "Max 20x" label |
-| **Context Left** | Remaining context with "context:" prefix | Gray text with "left" suffix |
+Colour is the same everywhere: green under 60%, amber 60-85%, red above.
+
+## What it deliberately leaves out
+
+Earlier versions showed API dollar cost, a Max 20x amortization, message count, session duration and lines changed. All of it is gone.
+
+On a subscription plan the dollar figure is not what runs out — the percentage is. Showing a cost in dollars invites you to reason about the wrong number. Message counts and durations are activity, not consumption; a short conversation over a large codebase costs far more than a long one over a small file.
+
+## The `here` metric
+
+`here` is the point of the whole thing. Context is re-sent on every message, so a conversation gets more expensive the longer it runs, even when the questions stay small. `here` makes that visible: when it climbs quickly, the fix is usually to finish and open a fresh session rather than to ask less.
+
+It is stored per session under `~/.claude/.statusline-sessions/`, one small file per session, pruned automatically after 14 days. If the weekly counter resets mid-session, the baseline re-anchors instead of pinning at zero.
 
 ## Installation
 
 ### Requirements
 
-- **jq**: JSON processor
-- **bc**: Calculator for arithmetic
-- macOS/Linux/WSL environment
-
-Install dependencies:
+`bash` and `jq`.
 
 ```bash
 # macOS
-brew install jq bc
+brew install jq
 
 # Ubuntu/Debian
-sudo apt-get install jq bc
+sudo apt install jq
 
 # Fedora/RHEL
-sudo dnf install jq bc
+sudo dnf install jq
 ```
 
 ### Setup
 
-1. **Clone the repository:**
-
 ```bash
-git clone https://github.com/displace-agency/claude-statusline-enhanced.git
-cd claude-statusline-enhanced
+git clone https://github.com/displace-agency/tool-claude-statusline-enhanced.git
+cd tool-claude-statusline-enhanced
+chmod +x statusline.sh
 ```
 
-2. **Install the script:**
-
-```bash
-# Copy to Claude config directory
-cp statusline.sh ~/.claude/statusline-command.sh
-chmod +x ~/.claude/statusline-command.sh
-```
-
-3. **Configure Claude Code:**
-
-Add to your `~/.claude/settings.json`:
+Point Claude Code at it in `~/.claude/settings.json`:
 
 ```json
 {
   "statusLine": {
     "type": "command",
-    "command": "/Users/YOUR_USERNAME/.claude/statusline-command.sh"
+    "command": "/absolute/path/to/tool-claude-statusline-enhanced/statusline.sh"
   }
 }
 ```
 
-**Important:** Replace `YOUR_USERNAME` with your actual username, or use the full path from step 2.
+Use an absolute path. Restart Claude Code, or start a new session, to pick it up.
 
-4. **Restart Claude Code**
+### Updating
 
-The statusline will appear at the top of your terminal on the next conversation.
+```bash
+cd /path/to/tool-claude-statusline-enhanced
+git pull
+```
 
-## Configuration
+No other step. The settings entry keeps pointing at the same file.
 
-### Max 20x Cost Calculation
+## Recommended companion setting
 
-The "Max 20x" cost uses monthly amortization: `API Cost ÷ 12`
+```json
+{
+  "autoCompactWindow": 200000
+}
+```
 
-This is based on the actual value multiplier of the Max 20x plan:
-- Max 20x subscription: **$200/month**
-- Maximum API value: **$2,400/month** (50 sessions × $48 max per session)
-- Actual multiplier: **12x** ($2,400 ÷ $200)
-
-This shows what fraction of your $200 monthly subscription each session represents. You can adjust this multiplier in the script if you're on a different plan:
-
-- **Max 5x plan**: Change `/12` to `/3` (based on lower value multiplier)
-- **Pro plan**: Change `/12` to `/1` (no multiplier)
-- **Custom**: Set your own divisor based on your plan's value ratio
-
-### Color Customization
-
-The statusline uses a clean, minimal design with consistent gray text and white bullet separators. Colors are defined using ANSI escape codes:
-
-**Current Design:**
-- Metrics text: `\033[90m` - Bright Black (Gray)
-- Bullet separators: `\033[37m` - White
-- Git directory: `\033[32m` - Green
-- Git branch: `\033[35m` - Magenta
-- Git sync: `\033[36m` - Cyan
-
-**Other Available Colors:**
-- `\033[31m` - Red
-- `\033[33m` - Yellow
-- `\033[34m` - Blue
-- `\033[1;37m` - Bold White
-
-Modify the color codes in `statusline.sh` to match your preferences. The current design prioritizes consistency and readability with a subdued color palette that doesn't distract from your work.
-
-## How It Works
-
-The statusline script:
-
-1. Receives JSON data from Claude Code via stdin containing all session metrics
-2. Extracts token usage, costs, and context data from the `context_window` and `cost` fields
-3. Counts messages by parsing the transcript file
-4. **Calculates actual elapsed time** from first to last message timestamps (not wall-clock time, so pauses/idle time don't inflate the duration)
-5. Formats duration, tokens, and context with K/M suffixes for readability
-6. Calculates cache hit rate and Max 20x monthly amortization (API cost ÷ 12)
-7. Displays all metrics with consistent gray text and white bullet separators
-8. Updates automatically on every message in the conversation
-
-**Important Notes:**
-- **Model Display**: Shows your *current* model (e.g., "Haiku 4.5")
-- **Cost Accumulation**: Costs accumulate across *all* models used in the session
-  - If you switched from Sonnet → Haiku, costs reflect both
-  - This is why you might see high costs with Haiku displayed
-- **Time Calculation**: Uses message timestamps, not wall-clock time
-  - Only counts time from first to last message
-  - Doesn't inflate with long pauses or idle periods
+`autoCompactWindow` caps how large a conversation grows before Claude Code compacts it. A high value means every message re-sends a very large context. Setting it lower is usually the single biggest reduction in consumption available, and the statusline's `ctx` bar measures against it so you can see the effect.
 
 ## Troubleshooting
 
-### Statusline not showing
+**Statusline is blank.** The script exits quietly when it cannot parse the payload, so nothing renders rather than showing a broken line. Check `jq` is installed and on `PATH`.
 
-1. Verify the script is executable:
-   ```bash
-   ls -l ~/.claude/statusline-command.sh
-   ```
+**Rate limit fields missing.** `5h` and `week` are hidden when the payload does not carry them. Older Claude Code versions do not send them; update Claude Code.
 
-2. Check settings.json path is correct:
-   ```bash
-   cat ~/.claude/settings.json
-   ```
+**Inspect the payload.** Run with `STATUSLINE_DEBUG=1` set and the raw JSON is written to `/tmp/statusline-payload.json`. Read that file rather than guessing at field names.
 
-3. Test the script manually:
-   ```bash
-   echo '{"workspace":{"current_dir":"'"$(pwd)"'"},"model":{"display_name":"Sonnet 4.5"},"transcript_path":"test.jsonl"}' | ~/.claude/statusline-command.sh
-   ```
+## Licence
 
-### Dependencies missing
-
-```bash
-# Check if jq is installed
-which jq
-
-# Check if bc is installed
-which bc
-```
-
-### Colors not displaying
-
-Some terminals may not support ANSI color codes. Try a different terminal or update your terminal emulator.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Ideas for Improvement
-
-- [ ] Add tokens/minute burn rate
-- [ ] Add average cost per message
-- [ ] Support for custom pricing configurations
-- [ ] Configuration file for easy customization
-- [ ] Windows PowerShell version
-- [ ] Weekly/monthly usage summaries
-- [ ] Export session metrics to CSV/JSON
-- [ ] Configurable cache efficiency thresholds with color indicators
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-## Acknowledgments
-
-- Inspired by [claude-code-statusline](https://github.com/levz0r/claude-code-statusline)
-- Built for the Claude Code community
-
-## Support
-
-If you find this helpful, please star the repository!
-
-For issues or questions, please [open an issue](https://github.com/displace-agency/claude-statusline-enhanced/issues).
-
----
-
-**Note:** This is a community project and is not officially affiliated with Anthropic.
+MIT. See `LICENSE`.
